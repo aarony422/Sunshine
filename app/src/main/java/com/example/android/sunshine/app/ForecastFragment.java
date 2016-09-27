@@ -150,6 +150,14 @@ public class ForecastFragment extends Fragment {
             long roundedHigh = Math.round(high);
             long roundedLow = Math.round(low);
 
+            // check if temperature units preferences are Imperial
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String units = prefs.getString(getString(R.string.pref_unit_key), getString(R.string.pref_unit_metric));
+            if (units.equals(getString(R.string.pref_unit_imperial))) {
+                roundedHigh = (long)((1.8*roundedHigh) + 32);
+                roundedLow = (long)((1.8*roundedLow) + 32);
+            }
+
             String highLowStr = roundedHigh + "/" + roundedLow;
             return highLowStr;
         }
@@ -226,6 +234,11 @@ public class ForecastFragment extends Fragment {
             return resultStrs;
 
         }
+
+        private void convertImperial(String[] results) {
+
+        }
+
         @Override
         protected String[] doInBackground(String... params) {
 

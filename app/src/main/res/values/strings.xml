@@ -28,4 +28,16 @@
     <!-- Default postal code for location preference [CHAR LIMIT=NONE] -->
     <string name="pref_location_default" translatable="false">94043</string>
 
+    <!-- label for unit preference -->
+    <string name="pref_unit_label">Temperature Units</string>
+
+    <!-- key name for unit -->
+    <string name="pref_unit_key" translatable="false">unit</string>
+
+    <!-- metric unit preference -->
+    <string name="pref_unit_metric" translatable="false">metric</string>
+
+    <!-- imperical unit preference -->
+    <string name="pref_unit_imperial" translatable="false">imperial</string>
+
 </resources>
