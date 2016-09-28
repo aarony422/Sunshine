@@ -16,12 +16,19 @@
 
 package com.example.android.sunshine.app;
 
-import android.support.v7.app.ActionBarActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -45,6 +52,7 @@ public class DetailActivity extends ActionBarActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.detail, menu);
+
         return true;
     }
 
@@ -60,7 +68,6 @@ public class DetailActivity extends ActionBarActivity {
             startActivity(new Intent(this, SettingsActivity.class));
             return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 
@@ -71,6 +78,13 @@ public class DetailActivity extends ActionBarActivity {
 
         public DetailFragment() {
         }
+
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            // Add this line in order for this fragment to handle menu events.
+            setHasOptionsMenu(true);
+        }
+
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -87,6 +101,55 @@ public class DetailActivity extends ActionBarActivity {
             }
 
             return rootView;
+        }
+
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            inflater.inflate(R.menu.detailfragment, menu);
+            MenuItem item = menu.findItem(R.id.menu_item_share);
+
+            // Fetch and store ShareActionProvider
+            ShareActionProvider mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
+
+            // set ShareActionIntent
+            setShareIntent(mShareActionProvider);
+        }
+
+        public boolean onOptionsItemSelected(MenuItem item) {
+            // Handle action bar item clicks here. The action bar will
+            // automatically handle clicks on the Home/Up button, so long
+            // as you specify a parent activity in AndroidManifest.xml.
+            int id = item.getItemId();
+
+            if (id == R.id.action_map) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                String location = prefs.getString(getString(R.string.pref_location_key),
+                        getString(R.string.pref_location_default));
+                showMap(Uri.parse("geo:0,0?q=" + location));
+                return true;
+            }
+
+            return super.onOptionsItemSelected(item);
+        }
+
+        public void showMap(Uri geoLocation) {
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(geoLocation);
+            if (intent.resolveActivity(getActivity().getPackageManager()) != null) {
+                startActivity(intent);
+            } else {
+                Log.v("Detail Activity", "Couldn't resolve activity");
+            }
+        }
+
+        private void setShareIntent(ShareActionProvider mShareActionProvider) {
+            Intent sendIntent = new Intent();
+            sendIntent.setAction(Intent.ACTION_SEND);
+            sendIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            sendIntent.putExtra(Intent.EXTRA_TEXT, getActivity().getIntent().getStringExtra(Intent.EXTRA_TEXT) + " #SunshineApp");
+            sendIntent.setType("text/plain");
+            if (mShareActionProvider != null) {
+                mShareActionProvider.setShareIntent(sendIntent);
+            }
         }
     }
 }
