@@ -15,11 +15,15 @@
  */
 package com.example.android.sunshine.app.data;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.test.AndroidTestCase;
 
 import java.util.HashSet;
+
+import static com.example.android.sunshine.app.data.TestUtilities.createNorthPoleLocationValues;
+import static com.example.android.sunshine.app.data.TestUtilities.validateCurrentRecord;
 
 public class TestDb extends AndroidTestCase {
 
@@ -112,22 +116,43 @@ public class TestDb extends AndroidTestCase {
     */
     public void testLocationTable() {
         // First step: Get reference to writable database
+        WeatherDbHelper dbHelper = new WeatherDbHelper(mContext);
+        SQLiteDatabase db = dbHelper.getWritableDatabase();
+        assertEquals(true, db.isOpen());
 
         // Create ContentValues of what you want to insert
         // (you can use the createNorthPoleLocationValues if you wish)
+        ContentValues northPole = createNorthPoleLocationValues();
 
         // Insert ContentValues into database and get a row ID back
+        long rowId = db.insert(WeatherContract.LocationEntry.TABLE_NAME, null, northPole);
+        assertTrue(rowId != -1);
 
         // Query the database and receive a Cursor back
+        Cursor cursor = db.query(false,
+                WeatherContract.LocationEntry.TABLE_NAME,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
 
         // Move the cursor to a valid database row
+        assertEquals("Should be True", true, cursor.moveToFirst());
 
         // Validate data in resulting Cursor with the original ContentValues
         // (you can use the validateCurrentRecord function in TestUtilities to validate the
         // query if you like)
+        validateCurrentRecord("Values did not match", cursor, northPole);
+        assertFalse("Error: More than one record returned from location query",
+                cursor.moveToNext());
 
         // Finally, close the cursor and database
-
+        cursor.close();
+        db.close();
     }
 
     /*
