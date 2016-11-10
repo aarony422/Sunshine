@@ -15,9 +15,11 @@
  */
 package com.example.android.sunshine.app;
 
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.preference.PreferenceManager;
@@ -25,6 +27,7 @@ import android.text.format.Time;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 
+import com.example.android.sunshine.app.data.WeatherContract;
 import com.example.android.sunshine.app.data.WeatherContract.WeatherEntry;
 
 import org.json.JSONArray;
@@ -40,6 +43,8 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
+
+import static com.example.android.sunshine.app.data.WeatherContract.WeatherEntry.getLocationSettingFromUri;
 
 public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
 
@@ -108,8 +113,32 @@ public class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
     long addLocation(String locationSetting, String cityName, double lat, double lon) {
         // Students: First, check if the location with this city name exists in the db
         // If it exists, return the current ID
+
+        ContentResolver resolver = mContext.getContentResolver();
+        Cursor cursor = resolver.query(
+                WeatherContract.LocationEntry.CONTENT_URI,
+                null,
+                WeatherContract.LocationEntry.COLUMN_CITY_NAME + "=?",
+                new String[]{cityName},
+                null
+        );
+        if (cursor.moveToFirst()) {
+            return cursor.getInt(cursor.getColumnIndex(WeatherContract.LocationEntry._ID));
+        }
         // Otherwise, insert it using the content resolver and the base URI
-        return -1;
+        ContentValues values = getLocationContentValues(locationSetting, cityName, lat, lon);
+        Uri locationUri = resolver.insert(WeatherContract.LocationEntry.CONTENT_URI, values);
+
+        return Integer.parseInt(getLocationSettingFromUri(locationUri));
+    }
+
+    private ContentValues getLocationContentValues(String locationSetting, String cityName, double lat, double lon) {
+        ContentValues values = new ContentValues();
+        values.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+        values.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
+        values.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
+        values.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, lon);
+        return values;
     }
 
     /*
